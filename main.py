@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, session, url_for, flash, send_file, jsonify
-from flask_mysqldb import MySQL
+import mysql.connector
 from datetime import datetime
 from werkzeug.security import check_password_hash, generate_password_hash
 import pandas as pd
@@ -25,11 +25,15 @@ app = Flask(__name__)
 
 # Koneksi
 app.secret_key = 'bebasapasaja'
-app.config['MYSQL_HOST'] ='localhost'
-app.config['MYSQL_USER'] ='root'
-app.config['MYSQL_PASSWORD'] =''
-app.config['MYSQL_DB'] ='dataakun'
-mysql = MySQL(app)
+
+connection = mysql.connector.connect(
+    host ='sql6.freemysqlhosting.net',
+    user ='sql6633117',
+    password ='uXkrnBC4EK',
+    database ='sql6633117'
+)
+
+#mysql = connection
 
 # Index
 @app.route('/')
@@ -99,12 +103,12 @@ def registrasi():
         level = request.form['level']
 
         # Cek username atau email
-        cursor = mysql.connection.cursor()
+        cursor = connection.cursor()
         cursor.execute('SELECT * FROM tb_users WHERE username=%s OR email=%s', (username, email, ))
         akun = cursor.fetchone()
         if akun is None:
             cursor.execute('INSERT INTO tb_users VALUES (NULL, %s, %s, %s, %s)', (username, email, generate_password_hash(password), level))
-            mysql.connection.commit()
+            connection.commit()
             flash('Registrasi Berhasil', 'success')
         else:
             flash('Username atau email sudah ada', 'danger')
@@ -119,7 +123,7 @@ def login():
         password = request.form['password']
 
         # Cek data username
-        cursor = mysql.connection.cursor()
+        cursor = connection.cursor()
         cursor.execute('SELECT * FROM tb_users WHERE email=%s', (email, ))
         akun = cursor.fetchone()
         if akun is None:
@@ -356,4 +360,4 @@ def about():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
